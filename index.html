@@ -5,100 +5,225 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lubestation Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.js"></script>
 <style>
-:root{--bg:#f3f5f7;--card:#fff;--ink:#16202b;--mute:#5d6b79;--line:#d9e0e7;--acc:#1f6fd1;--acc-ink:#fff;--ok:#1f8a4c;--bad:#c0392b;--warn:#b7791f;--run:#1f6fd1;--chip:#eef3f8}
-@media (prefers-color-scheme:dark){:root{--bg:#0f141a;--card:#161d25;--ink:#e6edf3;--mute:#93a1af;--line:#26313d;--acc:#4b93ec;--chip:#1c2631}}
+:root{
+  --paper:#f6f7f4; --sheet:#fcfcfa; --ink:#1a2128; --ink2:#46525e; --mute:#7a8691;
+  --grid:rgba(26,33,40,.055); --grid2:rgba(26,33,40,.10); --rule:#1a2128; --hair:#c9cfd4;
+  --acc:#1f4fa3; --acc-ink:#fff; --field:#fff;
+  --ok:#1d7a45; --bad:#b4271f; --warn:#a86a0c; --run:#1f4fa3;
+  --ok-bg:rgba(29,122,69,.10); --bad-bg:rgba(180,39,31,.09); --run-bg:rgba(31,79,163,.10); --warn-bg:rgba(168,106,12,.10);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#0b1d33; --sheet:#0e2440; --ink:#dce9fb; --ink2:#a9bfdc; --mute:#7f97b6;
+  --grid:rgba(160,200,255,.06); --grid2:rgba(160,200,255,.12); --rule:#c6dbf7; --hair:#2b4569;
+  --acc:#7fb2ff; --acc-ink:#0b1d33; --field:#0b1d33;
+  --ok:#5fd394; --bad:#ff7d73; --warn:#f0b450; --run:#7fb2ff;
+  --ok-bg:rgba(95,211,148,.12); --bad-bg:rgba(255,125,115,.12); --run-bg:rgba(127,178,255,.13); --warn-bg:rgba(240,180,80,.12);
+  color-scheme:dark;
+}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif}
-header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card)}
-header h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.2px}
-header .sub{color:var(--mute);font-size:13px}
-header .sp{flex:1}
-.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;background:var(--mute)}
-.dot.on{background:var(--ok)}.dot.off{background:var(--bad)}
-main{max-width:1180px;margin:0 auto;padding:20px 16px;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:20px}
-@media (max-width:900px){main{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
-.card h2{font-size:14px;text-transform:uppercase;letter-spacing:.8px;color:var(--mute);margin:0 0 14px;font-weight:600}
-label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
-input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit}
-input:focus,select:focus{outline:2px solid var(--acc);outline-offset:0;border-color:transparent}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-button{font:inherit;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
-.primary{background:var(--acc);color:var(--acc-ink);font-weight:600;width:100%;margin-top:18px;padding:12px}
-.primary:disabled{opacity:.5;cursor:default}
-.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);padding:6px 10px;font-size:13px}
-.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px}
-.msg{margin-top:10px;font-size:13px}.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
-.job{border:1px solid var(--line);border-radius:9px;padding:14px;margin-bottom:12px}
-.job .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.job .code{font-weight:600}
-.badge{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--chip);color:var(--mute);text-transform:uppercase;letter-spacing:.5px}
-.badge.running{color:var(--run)}.badge.done{color:var(--ok)}.badge.failed{color:var(--bad)}.badge.queued{color:var(--warn)}
-.steps{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 4px}
-.st{font-size:11.5px;padding:3px 7px;border-radius:5px;background:var(--chip);color:var(--mute)}
-.st.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
-.st.bad{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
-.st.now{background:color-mix(in srgb,var(--run) 18%,transparent);color:var(--run);font-weight:600}
-.meta{color:var(--mute);font-size:13px;margin-top:6px;word-break:break-word}
-details{margin-top:8px}summary{cursor:pointer;color:var(--mute);font-size:13px}
-details ul{margin:6px 0 0;padding-left:18px;font-size:13px}
-pre{white-space:pre-wrap;font-size:12px;background:var(--bg);padding:8px;border-radius:6px;max-height:200px;overflow:auto}
-#login{max-width:380px;margin:60px auto}
+html{background:var(--paper)}
+body{margin:0;min-height:100vh;color:var(--ink);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid2) 1px,transparent 1px),linear-gradient(90deg,var(--grid2) 1px,transparent 1px),
+    linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100px 100px,100px 100px,20px 20px,20px 20px;
+  font:15px/1.5 "IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;padding:24px 16px 40px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace}
 .hidden{display:none!important}
+
+/* sheet frame with zone markers */
+.sheet{max-width:1240px;margin:0 auto;position:relative;background:var(--sheet);border:1px solid var(--rule);padding:14px}
+.sheet::before{content:"";position:absolute;inset:6px;border:2px solid var(--rule);pointer-events:none}
+.zones{position:absolute;display:flex;justify-content:space-around;font:500 10px "IBM Plex Mono",monospace;color:var(--mute);pointer-events:none}
+.zones.top{top:-17px;left:0;right:0}.zones.bot{bottom:-17px;left:0;right:0}
+.zones.side{flex-direction:column;top:0;bottom:0;left:-15px}.zones.side.r{left:auto;right:-15px}
+.inner{position:relative;padding:10px}
+
+/* title block header */
+.tb{display:grid;grid-template-columns:2.4fr 1fr .5fr 1.3fr auto;border:2px solid var(--rule)}
+.tb>div{border-right:1px solid var(--rule);padding:6px 12px 8px;min-width:0}
+.tb>div:last-child{border-right:0}
+.cell-l{display:block;font:500 9.5px/1.2 "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--mute);text-transform:uppercase;margin-bottom:3px}
+.tb h1{margin:0;font-size:24px;line-height:1.15;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.tb .sub{font-size:13px;color:var(--ink2);letter-spacing:.02em}
+.tb .val{font:600 15px "IBM Plex Mono",monospace}
+.status{display:flex;align-items:center;gap:8px;font:500 13px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.04em}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mute);flex:none}
+.dot.on{background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:ping 2.4s infinite}
+.dot.off{background:var(--bad)}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.tb .act{display:flex;align-items:center}
+@media (max-width:860px){.tb{grid-template-columns:1fr 1fr}.tb>div{border-bottom:1px solid var(--rule)}.tb .t{grid-column:1/-1;border-right:0}.tb .act{grid-column:1/-1;border-bottom:0}}
+
+/* layout */
+.cols{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:22px;margin-top:22px}
+@media (max-width:960px){.cols{grid-template-columns:1fr}}
+.view{border:1px solid var(--rule);padding:18px 18px 20px;position:relative;background:var(--sheet)}
+.vt{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+.vt h2{margin:0;font-size:17px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px}
+.vt .scale{font:500 11px "IBM Plex Mono",monospace;color:var(--mute);letter-spacing:.08em}
+.vt .sp{flex:1}
+
+/* form groups with balloons */
+fieldset{border:0;margin:16px 0 0;padding:0}
+legend{display:flex;align-items:center;gap:9px;padding:0;margin-bottom:4px;font:600 12px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);width:100%}
+legend::after{content:"";flex:1;border-top:1px dashed var(--hair)}
+.balloon{width:24px;height:24px;border:1.5px solid var(--rule);border-radius:50%;display:inline-grid;place-items:center;font:600 12px "IBM Plex Mono",monospace;color:var(--ink);flex:none}
+label{display:block;font:500 10.5px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:11px 0 4px}
+input,select{width:100%;padding:8px 10px;border:1px solid var(--hair);border-bottom:1.5px solid var(--rule);border-radius:0;background:var(--field);color:var(--ink);font:500 15px "IBM Plex Sans Condensed",system-ui,sans-serif}
+input.mono{font:500 14px "IBM Plex Mono",monospace;letter-spacing:.03em}
+input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:420px){.row3{grid-template-columns:1fr}}
+
+button{font:inherit;cursor:pointer;border-radius:0}
+.primary{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;margin-top:22px;padding:14px;background:var(--ink);color:var(--sheet);border:2px solid var(--ink);font:600 15px "IBM Plex Mono",monospace;letter-spacing:.22em;text-transform:uppercase;transition:background .15s,color .15s}
+.primary:hover{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.primary:disabled{opacity:.5;cursor:default}
+.primary .arr{font-size:18px;letter-spacing:0}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule);padding:6px 12px;font:500 12px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase}
+.ghost:hover{background:var(--ink);color:var(--sheet)}
+.msg{margin-top:10px;font:500 13px "IBM Plex Mono",monospace}.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+
+/* runs, styled as revision blocks */
+.empty{border:1px dashed var(--hair);padding:36px 18px;text-align:center;color:var(--mute);font:500 13px "IBM Plex Mono",monospace;letter-spacing:.06em;margin-top:12px}
+.job{border:1px solid var(--rule);margin-top:14px}
+.jh{display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;border-bottom:1px solid var(--rule)}
+.jh>div{padding:8px 12px;border-right:1px solid var(--rule);min-width:0}
+.jh>div:last-child{border-right:0}
+.jcode{font:600 16px "IBM Plex Mono",monospace;letter-spacing:.02em;word-break:break-all}
+.jwhen{font:500 12px "IBM Plex Mono",monospace;color:var(--ink2)}
+.stamp{display:inline-block;padding:3px 10px;border:2px solid currentColor;font:700 12px "IBM Plex Mono",monospace;letter-spacing:.16em;text-transform:uppercase;transform:rotate(-3deg)}
+.stamp.running{color:var(--run)}.stamp.done{color:var(--ok)}.stamp.failed{color:var(--bad)}.stamp.queued{color:var(--warn)}.stamp.cancelled{color:var(--mute)}
+.jb{padding:10px 12px 12px}
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0;border:1px solid var(--hair)}
+.spec>div{padding:5px 9px;border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);min-width:0}
+.spec .v{font:500 13px "IBM Plex Mono",monospace;word-break:break-word}
+.prog{margin-top:12px}
+.ph{display:flex;justify-content:space-between;font:500 11px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
+.ph b{color:var(--ink)}
+.bar{display:flex;border:1px solid var(--rule);height:22px}
+.seg{flex:1;border-right:1px solid var(--hair);position:relative;background:transparent}
+.seg:last-child{border-right:0}
+.seg.ok{background:var(--ok-bg);box-shadow:inset 0 -3px 0 var(--ok)}
+.seg.bad{background:var(--bad-bg);box-shadow:inset 0 -3px 0 var(--bad)}
+.seg.now{background:repeating-linear-gradient(-45deg,var(--run-bg) 0 6px,transparent 6px 12px);box-shadow:inset 0 -3px 0 var(--run);animation:slide 1s linear infinite;background-size:17px 17px}
+@keyframes slide{to{background-position:17px 0}}
+.steps{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:7px}
+.st{font:500 11px "IBM Plex Mono",monospace;color:var(--mute);letter-spacing:.02em}
+.st::before{content:"○ "}
+.st.ok{color:var(--ok)}.st.ok::before{content:"● "}
+.st.bad{color:var(--bad)}.st.bad::before{content:"✕ "}
+.st.now{color:var(--run);font-weight:600}.st.now::before{content:"◐ "}
+.meta{color:var(--ink2);font-size:13.5px;margin-top:8px;word-break:break-word}
+.meta.mono{font-size:12.5px}
+details{margin-top:8px;border-top:1px dashed var(--hair);padding-top:6px}
+summary{cursor:pointer;font:500 12px "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+details.flags summary{color:var(--warn)}
+details ul{margin:6px 0 0;padding-left:20px;font-size:13.5px}
+pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var(--paper);border:1px solid var(--hair);padding:8px;max-height:220px;overflow:auto}
+
+/* notes block */
+.notes{margin-top:22px;border-top:1px solid var(--rule);padding-top:10px;font:500 11.5px/1.7 "IBM Plex Mono",monospace;color:var(--ink2);letter-spacing:.03em}
+.notes b{letter-spacing:.12em}
+.notes ol{margin:2px 0 0;padding-left:20px}
+
+/* login */
+#login{max-width:420px;margin:40px auto 10px}
+#login .view{padding:22px}
+@media (max-width:560px){
+  body{padding:20px 12px 32px}.sheet{padding:8px}.inner{padding:6px}.view{padding:14px}
+  .jh{grid-template-columns:1fr auto}
+  .jh>div:nth-child(2){grid-column:1/-1;order:3;border-top:1px solid var(--rule);border-right:0}
+  .vt{flex-wrap:wrap}
+}
 </style>
 </head>
 <body>
-<header>
-  <div><h1>Skid Lubestation Generator</h1><div class="sub">Atrada · one button: models, drawings, PDF, DXF, STEP, Master BOM</div></div>
-  <div class="sp"></div>
-  <div id="bridge" class="sub hidden"><span class="dot"></span><span id="bridgeTxt">computer</span></div>
-  <button id="logout" class="ghost hidden">Log out</button>
-</header>
+<div class="sheet">
+  <div class="zones top"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+  <div class="zones bot"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+  <div class="zones side"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
+  <div class="zones side r"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
+  <div class="inner">
 
-<section id="login" class="card">
-  <h2>Log in</h2>
-  <form id="loginForm">
-    <label for="email">Email</label><input id="email" type="email" autocomplete="username" required>
-    <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
-    <button class="primary" type="submit">Log in</button>
-    <div id="loginMsg" class="msg"></div>
-  </form>
-</section>
+  <header class="tb">
+    <div class="t"><span class="cell-l">Title</span><h1>Skid Lubestation Generator</h1><div class="sub">Models · drawings · PDF · DXF · STEP · Master BOM: one button</div></div>
+    <div><span class="cell-l">Dwg no.</span><div class="val">LS1000-GEN</div></div>
+    <div><span class="cell-l">Rev</span><div class="val">0</div></div>
+    <div><span class="cell-l">Workstation</span><div id="bridge" class="status"><span class="dot"></span><span id="bridgeTxt">—</span></div></div>
+    <div class="act"><button id="logout" class="ghost hidden">Log out</button></div>
+  </header>
 
-<main id="app" class="hidden">
-  <section class="card">
-    <h2>New variant</h2>
-    <form id="genForm">
-      <div class="row">
-        <div><label for="fluid">Fluid</label><select id="fluid" required></select></div>
-        <div><label for="colour">Colour</label><input id="colour" list="colours" value="SILVER" required><datalist id="colours"></datalist></div>
-      </div>
-      <label for="pump">Pump</label><select id="pump" required></select>
-      <label for="hose_reel">Hose reel</label><select id="hose_reel" required></select>
-      <label for="end_fitting">End fitting / nozzle</label><select id="end_fitting" required></select>
-      <label for="code">Project code</label><input id="code" class="mono" placeholder="LS1000-1855-OIL-GRA" required>
-      <label for="description">Description</label><input id="description" placeholder="Lubestation 1 IBC Oil Dispensing Skid - Graco Pump" required>
-      <div class="row">
-        <div><label for="so_num">SO #</label><input id="so_num" placeholder="SOTS....."></div>
-        <div><label for="client">Client</label><input id="client"></div>
-      </div>
-      <div class="row">
-        <div><label for="drawn_by">Drawn</label><input id="drawn_by"></div>
-        <div><label for="checked_by">Checked</label><input id="checked_by"></div>
-      </div>
-      <label for="approved_by">Approved</label><input id="approved_by">
-      <button class="primary" id="genBtn" type="submit">Generate</button>
-      <div id="genMsg" class="msg"></div>
-    </form>
+  <section id="login">
+    <div class="view">
+      <div class="vt"><h2>Sign in</h2><span class="sp"></span><span class="scale">AUTHORISED USERS</span></div>
+      <form id="loginForm">
+        <label for="email">Email</label><input id="email" type="email" autocomplete="username" required>
+        <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+        <button class="primary" type="submit">Log in <span class="arr">→</span></button>
+        <div id="loginMsg" class="msg"></div>
+      </form>
+    </div>
   </section>
-  <section class="card">
-    <h2>Runs</h2>
-    <div id="jobs"><div class="meta">Loading…</div></div>
-  </section>
-</main>
+
+  <main id="app" class="cols hidden">
+    <section class="view">
+      <div class="vt"><h2>View A: new variant</h2><span class="sp"></span><span class="scale">SCALE 1:1</span></div>
+      <form id="genForm">
+        <fieldset>
+          <legend><span class="balloon">1</span>Configuration</legend>
+          <div class="row">
+            <div><label for="fluid">Fluid</label><select id="fluid" required></select></div>
+            <div><label for="colour">Colour</label><input id="colour" list="colours" value="SILVER" required><datalist id="colours"></datalist></div>
+          </div>
+          <label for="pump">Pump</label><select id="pump" required></select>
+          <label for="hose_reel">Hose reel</label><select id="hose_reel" required></select>
+          <label for="end_fitting">End fitting / nozzle</label><select id="end_fitting" required></select>
+        </fieldset>
+        <fieldset>
+          <legend><span class="balloon">2</span>Document</legend>
+          <label for="code">Project code</label><input id="code" class="mono" placeholder="LS1000-1855-OIL-GRA" required>
+          <label for="description">Description</label><input id="description" placeholder="Lubestation 1 IBC Oil Dispensing Skid - Graco Pump" required>
+          <div class="row">
+            <div><label for="so_num">SO #</label><input id="so_num" class="mono" placeholder="SOTS....."></div>
+            <div><label for="client">Client</label><input id="client"></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend><span class="balloon">3</span>Sign-off</legend>
+          <div class="row3">
+            <div><label for="drawn_by">Drawn</label><input id="drawn_by"></div>
+            <div><label for="checked_by">Checked</label><input id="checked_by"></div>
+            <div><label for="approved_by">Approved</label><input id="approved_by"></div>
+          </div>
+        </fieldset>
+        <button class="primary" id="genBtn" type="submit">Generate <span class="arr">▸</span></button>
+        <div id="genMsg" class="msg"></div>
+      </form>
+    </section>
+
+    <section class="view">
+      <div class="vt"><h2>Revision log: runs</h2><span class="sp"></span><span class="scale" id="runCount"></span></div>
+      <div id="jobs"><div class="empty">Loading…</div></div>
+    </section>
+  </main>
+
+  <div class="notes" id="notes">
+    <b>NOTES:</b>
+    <ol>
+      <li>Runs execute on the linked workstation; SolidWorks must be open and pinned.</li>
+      <li>A full run takes about 2 hours. Output folder: GENERATED\&lt;project code&gt;.</li>
+      <li>Queued runs wait if the workstation is offline and start when it comes back.</li>
+    </ol>
+  </div>
+
+  </div>
+</div>
 
 <script>
 const SUPABASE_URL = "https://ehwwspfjvazokjnidcxa.supabase.co";
@@ -113,12 +238,13 @@ function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<
 
 async function loadOptions(){
   const {data, error} = await sb.from("generator_options").select("*").eq("id", 1).maybeSingle();
-  const b = $("bridge"); b.classList.remove("hidden");
-  if (error || !data){ $("bridgeTxt").textContent = "computer not connected yet"; b.querySelector(".dot").className = "dot off"; return; }
+  const dot = $("bridge").querySelector(".dot");
+  if (error || !data){ $("bridgeTxt").textContent = "Not connected"; dot.className = "dot off"; return; }
   OPTS = data.options;
   const age = (Date.now() - new Date(data.bridge_seen).getTime()) / 1000;
-  b.querySelector(".dot").className = "dot " + (age < 150 ? "on" : "off");
-  $("bridgeTxt").textContent = age < 150 ? "computer online" : "computer offline (runs wait in the queue)";
+  dot.className = "dot " + (age < 150 ? "on" : "off");
+  $("bridgeTxt").textContent = age < 150 ? "Online" : "Offline";
+  $("bridge").title = age < 150 ? "Your computer is connected" : "Computer offline: runs wait in the queue";
   if (!$("pump").options.length){
     fill($("fluid"), OPTS.fluids); fill($("pump"), OPTS.pumps); fill($("hose_reel"), OPTS.hose_reels); fill($("end_fitting"), OPTS.end_fittings);
     $("colours").innerHTML = OPTS.colours.map(c => `<option value="${c}">`).join("");
@@ -135,42 +261,66 @@ function suggest(){
 for (const id of ["code","description"]) $(id).addEventListener("input", e => e.target.dataset.touched = "1");
 $("fluid").addEventListener("change", suggest);
 
-function stepsHtml(job){
+function stepState(job, s){
+  const v = (job.progress || {})[s];
+  if (v) return v.ok ? "ok" : "bad";
+  if (job.status === "running" && job.step === s) return "now";
+  return "";
+}
+function progHtml(job){
   const steps = (OPTS && OPTS.steps) || [];
+  if (!steps.length) return "";
   const p = job.progress || {};
-  return steps.map(s => {
-    const v = p[s]; let c = "st";
-    if (v) c += v.ok ? " ok" : " bad"; else if (job.status === "running" && job.step === s) c += " now";
-    const t = v && v.seconds != null ? ` ${Math.round(v.seconds/60)}m` : "";
-    return `<span class="${c}" title="${s}${t}">${s}${v && v.seconds > 59 ? t : ""}</span>`;
+  const done = steps.filter(s => p[s] && p[s].ok).length;
+  const segs = steps.map(s => `<div class="seg ${stepState(job, s)}" title="${esc(s)}"></div>`).join("");
+  const names = steps.map(s => {
+    const v = p[s], c = stepState(job, s);
+    const t = v && v.seconds > 59 ? ` ${Math.round(v.seconds/60)}m` : "";
+    return `<span class="st ${c}">${esc(s)}${t}</span>`;
   }).join("");
+  return `<div class="prog"><div class="ph"><span>Progress</span><span><b>${done}</b> / ${steps.length} steps</span></div>
+    <div class="bar">${segs}</div><div class="steps">${names}</div></div>`;
 }
 
 async function loadJobs(){
   const {data, error} = await sb.from("generate_jobs").select("*").order("created_at", {ascending:false}).limit(15);
   if (error){ $("jobs").innerHTML = `<div class="msg err">${esc(error.message)}</div>`; return; }
-  if (!data.length){ $("jobs").innerHTML = `<div class="meta">No runs yet. Fill in the form and press Generate.</div>`; return; }
+  $("runCount").textContent = data.length ? `${data.length} RUN${data.length > 1 ? "S" : ""}` : "";
+  if (!data.length){ $("jobs").innerHTML = `<div class="empty">NO RUNS YET<br>Fill in View A and press Generate.</div>`; return; }
+  const open = new Set([...document.querySelectorAll("#jobs details[open]")].map(d => d.dataset.k));
   $("jobs").innerHTML = data.map(j => {
     const s = j.settings || {}, r = j.result || {}, flags = j.flags || [];
-    const when = new Date(j.created_at).toLocaleString();
+    const when = new Date(j.created_at).toLocaleString([], {dateStyle:"medium", timeStyle:"short"});
+    const o = k => open.has(j.id + k) ? " open" : "";
     return `<div class="job">
-      <div class="top"><span class="code mono">${esc(s.code)}</span><span class="badge ${j.status}">${j.status}</span>
-        <span class="meta" style="margin:0">${when}${r.minutes ? ` · ${r.minutes} min` : ""}</span>
-        ${j.status === "queued" ? `<button class="ghost" onclick="cancelJob('${j.id}')">Cancel</button>` : ""}</div>
-      <div class="meta">${esc(s.fluid)} · ${esc(s.pump)} · ${esc(s.hose_reel)} · ${esc(s.end_fitting)} · ${esc(s.colour)}</div>
-      ${j.status !== "queued" ? `<div class="steps">${stepsHtml(j)}</div>` : ""}
-      ${j.status === "running" && j.step ? `<div class="meta">Now: <b>${esc(j.step)}</b></div>` : ""}
-      ${r.project ? `<div class="meta mono">${esc(r.project)}</div>` : ""}
-      ${flags.length ? `<details><summary>${flags.length} flag(s) to check</summary><ul>${flags.map(f => `<li>${esc(f)}</li>`).join("")}</ul></details>` : ""}
-      ${r.pdfs && r.pdfs.length ? `<details><summary>${r.pdfs.length} PDF(s) in PDF DRAWINGS</summary><ul>${r.pdfs.map(f => `<li class="mono">${esc(f)}</li>`).join("")}</ul></details>` : ""}
-      ${r.log_tail ? `<details><summary>Log</summary><pre>${esc(r.log_tail)}</pre></details>` : ""}
+      <div class="jh">
+        <div><span class="cell-l">Project</span><div class="jcode">${esc(s.code)}</div></div>
+        <div><span class="cell-l">Date</span><div class="jwhen">${when}${r.minutes ? ` · ${r.minutes} min` : ""}</div></div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="stamp ${esc(j.status)}">${esc(j.status)}</span>
+          ${j.status === "queued" ? `<button class="ghost" onclick="cancelJob('${j.id}')">Cancel</button>` : ""}</div>
+      </div>
+      <div class="jb">
+        <div class="spec">
+          <div><span class="cell-l">Fluid</span><div class="v">${esc(s.fluid)}</div></div>
+          <div><span class="cell-l">Pump</span><div class="v">${esc(s.pump)}</div></div>
+          <div><span class="cell-l">Hose reel</span><div class="v">${esc(s.hose_reel)}</div></div>
+          <div><span class="cell-l">End fitting</span><div class="v">${esc(s.end_fitting)}</div></div>
+          <div><span class="cell-l">Colour</span><div class="v">${esc(s.colour)}</div></div>
+        </div>
+        ${j.status !== "queued" && j.status !== "cancelled" ? progHtml(j) : ""}
+        ${r.project ? `<div class="meta mono">↳ ${esc(r.project)}</div>` : ""}
+        ${flags.length ? `<details class="flags" data-k="${j.id}f"${o("f")}><summary>⚠ ${flags.length} flag(s) to check</summary><ul>${flags.map(f => `<li>${esc(f)}</li>`).join("")}</ul></details>` : ""}
+        ${r.pdfs && r.pdfs.length ? `<details data-k="${j.id}p"${o("p")}><summary>${r.pdfs.length} PDF(s) in PDF DRAWINGS</summary><ul>${r.pdfs.map(f => `<li class="mono">${esc(f)}</li>`).join("")}</ul></details>` : ""}
+        ${r.log_tail ? `<details data-k="${j.id}l"${o("l")}><summary>Log</summary><pre>${esc(r.log_tail)}</pre></details>` : ""}
+      </div>
     </div>`;
   }).join("");
 }
 
 async function cancelJob(id){
   const {error} = await sb.from("generate_jobs").update({status:"cancelled"}).eq("id", id).eq("status", "queued");
-  if (error) alert(error.message); loadJobs();
+  if (error){ $("genMsg").className = "msg err"; $("genMsg").textContent = error.message; }
+  loadJobs();
 }
 window.cancelJob = cancelJob;
 
