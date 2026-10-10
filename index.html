@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lubestation Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#f3f5f7;--card:#fff;--ink:#16202b;--mute:#5d6b79;--line:#d9e0e7;--acc:#1f6fd1;--acc-ink:#fff;--ok:#1f8a4c;--bad:#c0392b;--warn:#b7791f;--run:#1f6fd1;--chip:#eef3f8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f141a;--card:#161d25;--ink:#e6edf3;--mute:#93a1af;--line:#26313d;--acc:#4b93ec;--chip:#1c2631}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card)}
+header h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.2px}
+header .sub{color:var(--mute);font-size:13px}
+header .sp{flex:1}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;background:var(--mute)}
+.dot.on{background:var(--ok)}.dot.off{background:var(--bad)}
+main{max-width:1180px;margin:0 auto;padding:20px 16px;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:20px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+.card h2{font-size:14px;text-transform:uppercase;letter-spacing:.8px;color:var(--mute);margin:0 0 14px;font-weight:600}
+label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,select:focus{outline:2px solid var(--acc);outline-offset:0;border-color:transparent}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{font:inherit;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
+.primary{background:var(--acc);color:var(--acc-ink);font-weight:600;width:100%;margin-top:18px;padding:12px}
+.primary:disabled{opacity:.5;cursor:default}
+.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);padding:6px 10px;font-size:13px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px}
+.msg{margin-top:10px;font-size:13px}.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+.job{border:1px solid var(--line);border-radius:9px;padding:14px;margin-bottom:12px}
+.job .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.job .code{font-weight:600}
+.badge{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--chip);color:var(--mute);text-transform:uppercase;letter-spacing:.5px}
+.badge.running{color:var(--run)}.badge.done{color:var(--ok)}.badge.failed{color:var(--bad)}.badge.queued{color:var(--warn)}
+.steps{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 4px}
+.st{font-size:11.5px;padding:3px 7px;border-radius:5px;background:var(--chip);color:var(--mute)}
+.st.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.st.bad{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.st.now{background:color-mix(in srgb,var(--run) 18%,transparent);color:var(--run);font-weight:600}
+.meta{color:var(--mute);font-size:13px;margin-top:6px;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;color:var(--mute);font-size:13px}
+details ul{margin:6px 0 0;padding-left:18px;font-size:13px}
+pre{white-space:pre-wrap;font-size:12px;background:var(--bg);padding:8px;border-radius:6px;max-height:200px;overflow:auto}
+#login{max-width:380px;margin:60px auto}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Skid Lubestation Generator</h1><div class="sub">Atrada · one button: models, drawings, PDF, DXF, STEP, Master BOM</div></div>
+  <div class="sp"></div>
+  <div id="bridge" class="sub hidden"><span class="dot"></span><span id="bridgeTxt">computer</span></div>
+  <button id="logout" class="ghost hidden">Log out</button>
+</header>
+
+<section id="login" class="card">
+  <h2>Log in</h2>
+  <form id="loginForm">
+    <label for="email">Email</label><input id="email" type="email" autocomplete="username" required>
+    <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+    <button class="primary" type="submit">Log in</button>
+    <div id="loginMsg" class="msg"></div>
+  </form>
+</section>
+
+<main id="app" class="hidden">
+  <section class="card">
+    <h2>New variant</h2>
+    <form id="genForm">
+      <div class="row">
+        <div><label for="fluid">Fluid</label><select id="fluid" required></select></div>
+        <div><label for="colour">Colour</label><input id="colour" list="colours" value="SILVER" required><datalist id="colours"></datalist></div>
+      </div>
+      <label for="pump">Pump</label><select id="pump" required></select>
+      <label for="hose_reel">Hose reel</label><select id="hose_reel" required></select>
+      <label for="end_fitting">End fitting / nozzle</label><select id="end_fitting" required></select>
+      <label for="code">Project code</label><input id="code" class="mono" placeholder="LS1000-1855-OIL-GRA" required>
+      <label for="description">Description</label><input id="description" placeholder="Lubestation 1 IBC Oil Dispensing Skid - Graco Pump" required>
+      <div class="row">
+        <div><label for="so_num">SO #</label><input id="so_num" placeholder="SOTS....."></div>
+        <div><label for="client">Client</label><input id="client"></div>
+      </div>
+      <div class="row">
+        <div><label for="drawn_by">Drawn</label><input id="drawn_by"></div>
+        <div><label for="checked_by">Checked</label><input id="checked_by"></div>
+      </div>
+      <label for="approved_by">Approved</label><input id="approved_by">
+      <button class="primary" id="genBtn" type="submit">Generate</button>
+      <div id="genMsg" class="msg"></div>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Runs</h2>
+    <div id="jobs"><div class="meta">Loading…</div></div>
+  </section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://ehwwspfjvazokjnidcxa.supabase.co";
+const SUPABASE_KEY = "sb_publishable_kS-NwY0XFHEv1mLoSb-edQ_0F7eAlRB";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let OPTS = null, timer = null;
+const FLUID_WORD = {DEG:"Degreaser", OIL:"Oil", GRE:"Grease", WOIL:"Waste Oil", COO:"Coolant"};
+
+function fill(sel, items){ sel.innerHTML = items.map(o => `<option value="${o.key}">${o.label}</option>`).join(""); }
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+async function loadOptions(){
+  const {data, error} = await sb.from("generator_options").select("*").eq("id", 1).maybeSingle();
+  const b = $("bridge"); b.classList.remove("hidden");
+  if (error || !data){ $("bridgeTxt").textContent = "computer not connected yet"; b.querySelector(".dot").className = "dot off"; return; }
+  OPTS = data.options;
+  const age = (Date.now() - new Date(data.bridge_seen).getTime()) / 1000;
+  b.querySelector(".dot").className = "dot " + (age < 150 ? "on" : "off");
+  $("bridgeTxt").textContent = age < 150 ? "computer online" : "computer offline (runs wait in the queue)";
+  if (!$("pump").options.length){
+    fill($("fluid"), OPTS.fluids); fill($("pump"), OPTS.pumps); fill($("hose_reel"), OPTS.hose_reels); fill($("end_fitting"), OPTS.end_fittings);
+    $("colours").innerHTML = OPTS.colours.map(c => `<option value="${c}">`).join("");
+    for (const k of ["drawn_by","checked_by","approved_by"]) $(k).value = OPTS.defaults[k] || "";
+    $("fluid").value = "OIL"; suggest();
+  }
+}
+
+function suggest(){
+  const f = $("fluid").value;
+  if (!$("code").dataset.touched) $("code").value = `LS1000-1855-${f}-GRA`;
+  if (!$("description").dataset.touched) $("description").value = `Lubestation 1 IBC ${FLUID_WORD[f] || f} Dispensing Skid - Graco Pump`;
+}
+for (const id of ["code","description"]) $(id).addEventListener("input", e => e.target.dataset.touched = "1");
+$("fluid").addEventListener("change", suggest);
+
+function stepsHtml(job){
+  const steps = (OPTS && OPTS.steps) || [];
+  const p = job.progress || {};
+  return steps.map(s => {
+    const v = p[s]; let c = "st";
+    if (v) c += v.ok ? " ok" : " bad"; else if (job.status === "running" && job.step === s) c += " now";
+    const t = v && v.seconds != null ? ` ${Math.round(v.seconds/60)}m` : "";
+    return `<span class="${c}" title="${s}${t}">${s}${v && v.seconds > 59 ? t : ""}</span>`;
+  }).join("");
+}
+
+async function loadJobs(){
+  const {data, error} = await sb.from("generate_jobs").select("*").order("created_at", {ascending:false}).limit(15);
+  if (error){ $("jobs").innerHTML = `<div class="msg err">${esc(error.message)}</div>`; return; }
+  if (!data.length){ $("jobs").innerHTML = `<div class="meta">No runs yet. Fill in the form and press Generate.</div>`; return; }
+  $("jobs").innerHTML = data.map(j => {
+    const s = j.settings || {}, r = j.result || {}, flags = j.flags || [];
+    const when = new Date(j.created_at).toLocaleString();
+    return `<div class="job">
+      <div class="top"><span class="code mono">${esc(s.code)}</span><span class="badge ${j.status}">${j.status}</span>
+        <span class="meta" style="margin:0">${when}${r.minutes ? ` · ${r.minutes} min` : ""}</span>
+        ${j.status === "queued" ? `<button class="ghost" onclick="cancelJob('${j.id}')">Cancel</button>` : ""}</div>
+      <div class="meta">${esc(s.fluid)} · ${esc(s.pump)} · ${esc(s.hose_reel)} · ${esc(s.end_fitting)} · ${esc(s.colour)}</div>
+      ${j.status !== "queued" ? `<div class="steps">${stepsHtml(j)}</div>` : ""}
+      ${j.status === "running" && j.step ? `<div class="meta">Now: <b>${esc(j.step)}</b></div>` : ""}
+      ${r.project ? `<div class="meta mono">${esc(r.project)}</div>` : ""}
+      ${flags.length ? `<details><summary>${flags.length} flag(s) to check</summary><ul>${flags.map(f => `<li>${esc(f)}</li>`).join("")}</ul></details>` : ""}
+      ${r.pdfs && r.pdfs.length ? `<details><summary>${r.pdfs.length} PDF(s) in PDF DRAWINGS</summary><ul>${r.pdfs.map(f => `<li class="mono">${esc(f)}</li>`).join("")}</ul></details>` : ""}
+      ${r.log_tail ? `<details><summary>Log</summary><pre>${esc(r.log_tail)}</pre></details>` : ""}
+    </div>`;
+  }).join("");
+}
+
+async function cancelJob(id){
+  const {error} = await sb.from("generate_jobs").update({status:"cancelled"}).eq("id", id).eq("status", "queued");
+  if (error) alert(error.message); loadJobs();
+}
+window.cancelJob = cancelJob;
+
+$("genForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const settings = {};
+  for (const k of ["fluid","colour","pump","hose_reel","end_fitting","code","description","so_num","client","drawn_by","checked_by","approved_by"])
+    settings[k] = $(k).value.trim();
+  settings.code = settings.code.toUpperCase(); settings.colour = settings.colour.toUpperCase();
+  if (!/^[A-Z0-9][A-Z0-9-]{3,40}$/.test(settings.code)){ $("genMsg").className = "msg err"; $("genMsg").textContent = "Project code: letters, digits and '-' only."; return; }
+  $("genBtn").disabled = true;
+  const {error} = await sb.from("generate_jobs").insert({settings, status:"queued"});
+  $("genBtn").disabled = false;
+  $("genMsg").className = "msg " + (error ? "err" : "ok");
+  $("genMsg").textContent = error ? error.message : "Queued. Your computer picks it up within a few seconds.";
+  loadJobs();
+});
+
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const {error} = await sb.auth.signInWithPassword({email:$("email").value, password:$("pw").value});
+  $("loginMsg").className = "msg err"; $("loginMsg").textContent = error ? error.message : "";
+  if (!error) start();
+});
+$("logout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+
+async function start(){
+  $("login").classList.add("hidden"); $("app").classList.remove("hidden"); $("logout").classList.remove("hidden");
+  await loadOptions(); await loadJobs();
+  clearInterval(timer); timer = setInterval(() => { loadOptions(); loadJobs(); }, 6000);
+}
+sb.auth.getSession().then(({data}) => { if (data.session) start(); });
+</script>
+</body>
+</html>
