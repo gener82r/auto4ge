@@ -127,6 +127,34 @@ details.flags summary{color:var(--warn)}
 details ul{margin:6px 0 0;padding-left:20px;font-size:13.5px}
 pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var(--paper);border:1px solid var(--hair);padding:8px;max-height:220px;overflow:auto}
 
+/* form help */
+.hint{font-size:12.5px;color:var(--mute);margin-top:3px;line-height:1.35}
+.fieldwarn{margin-top:6px;padding:6px 9px;border-left:3px solid var(--warn);background:var(--warn-bg);color:var(--warn);font:500 12.5px/1.4 "IBM Plex Mono",monospace}
+.fieldwarn.bad{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.outpath{margin-top:12px;padding:8px 10px;border:1px dashed var(--hair);background:var(--paper)}
+.outpath .mono{font-size:12.5px;word-break:break-all;color:var(--ink)}
+.dupnote{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 10px;margin-top:12px;border:1px solid var(--acc);background:var(--run-bg);color:var(--ink);font:500 12.5px "IBM Plex Mono",monospace}
+.dupnote button{flex:none}
+/* run card extras */
+.eta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font:500 12px "IBM Plex Mono",monospace;color:var(--ink2)}
+.eta b{color:var(--run)}
+.out{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:12px;margin-top:12px}
+.out.nopv{grid-template-columns:1fr}
+@media (max-width:560px){.out{grid-template-columns:1fr}}
+.pv{display:block;border:1px solid var(--rule);background:#fff;line-height:0}
+.pv img{width:100%;height:auto;display:block}
+.pvl{font:500 10px "IBM Plex Mono",monospace;letter-spacing:.1em;color:var(--mute);text-transform:uppercase;margin-top:4px}
+.dls{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;align-content:start}
+.dl{display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--rule);color:var(--ink);text-decoration:none;min-width:0;background:var(--sheet)}
+.dl:hover{background:var(--ink);color:var(--sheet)}
+.dl:hover .dk{border-color:var(--sheet)}
+.dk{flex:none;width:38px;padding:2px 0;border:1px solid var(--rule);text-align:center;font:600 10px "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase}
+.dt{min-width:0;display:flex;flex-direction:column}
+.dt b{font-weight:600;font-size:13.5px;line-height:1.2}
+.dt span{font:500 11px "IBM Plex Mono",monospace;opacity:.75}
+.dlnote{grid-column:1/-1;font:500 11px "IBM Plex Mono",monospace;color:var(--mute)}
+.jfoot{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
 /* notes block */
 .notes{margin-top:22px;border-top:1px solid var(--rule);padding-top:10px;font:500 11.5px/1.7 "IBM Plex Mono",monospace;color:var(--ink2);letter-spacing:.03em}
 .notes b{letter-spacing:.12em}
@@ -175,24 +203,36 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
     <section class="view">
       <div class="vt"><h2>View A: new variant</h2><span class="sp"></span><span class="scale">SCALE 1:1</span></div>
       <form id="genForm">
+        <div id="dupNote" class="dupnote hidden"></div>
         <fieldset>
           <legend><span class="balloon">1</span>Configuration</legend>
           <div class="row">
-            <div><label for="fluid">Fluid</label><select id="fluid" required></select></div>
-            <div><label for="colour">Colour</label><input id="colour" list="colours" value="SILVER" required><datalist id="colours"></datalist></div>
+            <div><label for="fluid">Fluid</label><select id="fluid" required></select>
+              <div class="hint">Stickers, Master BOM labels and the suggested code.</div></div>
+            <div><label for="colour">Colour</label><input id="colour" list="colours" value="SILVER" required><datalist id="colours"></datalist>
+              <div class="hint">Powder-coat colour on the palette sheet.</div></div>
           </div>
           <label for="pump">Pump</label><select id="pump" required></select>
+          <div class="hint">A layout swaps the pump, filter and brackets together.</div>
           <label for="hose_reel">Hose reel</label><select id="hose_reel" required></select>
+          <div class="hint">Reel sub-assembly from the standard parts library.</div>
           <label for="end_fitting">End fitting / nozzle</label><select id="end_fitting" required></select>
+          <div class="hint">Degreaser and waste oil normally keep the ball valve.</div>
         </fieldset>
         <fieldset>
           <legend><span class="balloon">2</span>Document</legend>
-          <label for="code">Project code</label><input id="code" class="mono" placeholder="LS1000-1855-OIL-GRA" required>
+          <label for="code">Project code</label><input id="code" class="mono" placeholder="LS1000-1855-OIL-GRA" autocomplete="off" required>
+          <div class="hint">Prefix of every file and drawing. Letters, digits and "-" only.</div>
+          <div id="codeWarn" class="fieldwarn hidden"></div>
           <label for="description">Description</label><input id="description" placeholder="Lubestation 1 IBC Oil Dispensing Skid - Graco Pump" required>
+          <div class="hint">Becomes part of the folder name.</div>
+          <div id="descWarn" class="fieldwarn bad hidden"></div>
           <div class="row">
             <div><label for="so_num">SO #</label><input id="so_num" class="mono" placeholder="SOTS....."></div>
             <div><label for="client">Client</label><input id="client"></div>
           </div>
+          <div class="hint">SO # and client go on the Master BOM header.</div>
+          <div class="outpath"><span class="cell-l">Output folder</span><span id="outPath" class="mono">—</span></div>
         </fieldset>
         <fieldset>
           <legend><span class="balloon">3</span>Sign-off</legend>
@@ -201,6 +241,7 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
             <div><label for="checked_by">Checked</label><input id="checked_by"></div>
             <div><label for="approved_by">Approved</label><input id="approved_by"></div>
           </div>
+          <div class="hint">Names printed in the title blocks.</div>
         </fieldset>
         <button class="primary" id="genBtn" type="submit">Generate <span class="arr">▸</span></button>
         <div id="genMsg" class="msg"></div>
@@ -217,7 +258,7 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
     <b>NOTES:</b>
     <ol>
       <li>Runs execute on the linked workstation; SolidWorks must be open and pinned.</li>
-      <li>A full run takes about 2 hours. Output folder: GENERATED\&lt;project code&gt;.</li>
+      <li>A full run takes about 2 hours. Finished runs offer downloads here (links renew automatically).</li>
       <li>Queued runs wait if the workstation is offline and start when it comes back.</li>
     </ol>
   </div>
@@ -230,11 +271,16 @@ const SUPABASE_URL = "https://ehwwspfjvazokjnidcxa.supabase.co";
 const SUPABASE_KEY = "sb_publishable_kS-NwY0XFHEv1mLoSb-edQ_0F7eAlRB";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
-let OPTS = null, timer = null;
+let OPTS = null, timer = null, JOBS = [], lastSig = "", lastStatus = {};
 const FLUID_WORD = {DEG:"Degreaser", OIL:"Oil", GRE:"Grease", WOIL:"Waste Oil", COO:"Coolant"};
+const FORM_KEYS = ["fluid","colour","pump","hose_reel","end_fitting","code","description","so_num","client","drawn_by","checked_by","approved_by"];
+const BAD_CHARS = /[<>:"\/\\|?*]/;
 
-function fill(sel, items){ sel.innerHTML = items.map(o => `<option value="${o.key}">${o.label}</option>`).join(""); }
-function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function fill(sel, items){ sel.innerHTML = items.map(o => `<option value="${esc(o.key)}">${esc(o.label)}</option>`).join(""); }
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtSize(b){ return b > 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB"; }
+function fmtDur(sec){ sec = Math.max(0, Math.round(sec)); const h = Math.floor(sec/3600), m = Math.round((sec%3600)/60); return h ? `${h} h ${m} min` : `${m} min`; }
+function fmtTime(d){ return d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); }
 
 async function loadOptions(){
   const {data, error} = await sb.from("generator_options").select("*").eq("id", 1).maybeSingle();
@@ -247,19 +293,62 @@ async function loadOptions(){
   $("bridge").title = age < 150 ? "Your computer is connected" : "Computer offline: runs wait in the queue";
   if (!$("pump").options.length){
     fill($("fluid"), OPTS.fluids); fill($("pump"), OPTS.pumps); fill($("hose_reel"), OPTS.hose_reels); fill($("end_fitting"), OPTS.end_fittings);
-    $("colours").innerHTML = OPTS.colours.map(c => `<option value="${c}">`).join("");
+    $("colours").innerHTML = OPTS.colours.map(c => `<option value="${esc(c)}">`).join("");
     for (const k of ["drawn_by","checked_by","approved_by"]) $(k).value = OPTS.defaults[k] || "";
     $("fluid").value = "OIL"; suggest();
   }
+  checkForm();
 }
 
 function suggest(){
   const f = $("fluid").value;
   if (!$("code").dataset.touched) $("code").value = `LS1000-1855-${f}-GRA`;
   if (!$("description").dataset.touched) $("description").value = `Lubestation 1 IBC ${FLUID_WORD[f] || f} Dispensing Skid - Graco Pump`;
+  checkForm();
 }
-for (const id of ["code","description"]) $(id).addEventListener("input", e => e.target.dataset.touched = "1");
+for (const id of ["code","description"]) $(id).addEventListener("input", e => { e.target.dataset.touched = "1"; checkForm(); });
 $("fluid").addEventListener("change", suggest);
+
+/* live checks on the document fields */
+function checkForm(){
+  const code = $("code").value.trim().toUpperCase(), desc = $("description").value.trim();
+  $("outPath").textContent = code && desc ? `GENERATED\\(${code}) ${desc} - REV.0` : "—";
+  const w = $("codeWarn"); let msg = "", bad = false;
+  if (code && !/^[A-Z0-9][A-Z0-9-]{3,40}$/.test(code)){ msg = "Use letters, digits and \"-\" only (4 to 41 characters)."; bad = true; }
+  else if (code){
+    const onDisk = OPTS && (OPTS.existing || []).includes(code);
+    const inRuns = JOBS.find(j => (j.settings || {}).code === code && ["queued","running","done"].includes(j.status));
+    if (inRuns && inRuns.status !== "done") { msg = `${code} is already ${inRuns.status}.`; bad = true; }
+    else if (onDisk || inRuns) msg = `${code} was generated before. A new run with the same code clashes with that folder; change the code unless you mean to replace it.`;
+  }
+  w.textContent = msg; w.className = "fieldwarn" + (bad ? " bad" : "") + (msg ? "" : " hidden");
+  const dw = $("descWarn");
+  const dbad = BAD_CHARS.test(desc);
+  dw.textContent = dbad ? 'Remove < > : " / \\ | ? * (not allowed in folder names).' : "";
+  dw.classList.toggle("hidden", !dbad);
+  return !(bad || dbad);
+}
+
+/* time left: median of this step's past runs, else the typical time the bridge sends */
+function stepSeconds(step){
+  const xs = JOBS.filter(j => j.status === "done").map(j => ((j.progress || {})[step] || {}).seconds).filter(x => x != null).sort((a,b) => a-b);
+  if (xs.length) return xs[Math.floor(xs.length/2)];
+  return ((OPTS && OPTS.typical_seconds) || {})[step] ?? 120;
+}
+function etaHtml(job){
+  const steps = (OPTS && OPTS.steps) || [], p = job.progress || {};
+  const started = new Date(job.created_at), ranFor = (Date.now() - started) / 1000;
+  if (job.status === "queued") return `<div class="eta">Waiting for the workstation · whole run ≈ <b>${fmtDur(steps.reduce((a,s) => a + stepSeconds(s), 0))}</b></div>`;
+  if (job.status !== "running") return "";
+  if (job.step === "waiting for the runner") return `<div class="eta">Waiting for the runner to start…</div>`;
+  const doneSec = steps.filter(s => p[s]).reduce((a,s) => a + (p[s].seconds || 0), 0);
+  const cur = steps.find(s => !p[s]);
+  const inCur = Math.max(0, ranFor - doneSec);
+  let left = steps.filter(s => !p[s]).reduce((a,s) => a + stepSeconds(s), 0);
+  if (cur) left -= Math.min(inCur, stepSeconds(cur) * 0.9);
+  const end = new Date(Date.now() + left * 1000);
+  return `<div class="eta"><span>Running ${fmtDur(ranFor)}</span><span>≈ <b>${fmtDur(left)}</b> left</span><span>finishes ~${fmtTime(end)}</span></div>`;
+}
 
 function stepState(job, s){
   const v = (job.progress || {})[s];
@@ -282,9 +371,29 @@ function progHtml(job){
     <div class="bar">${segs}</div><div class="steps">${names}</div></div>`;
 }
 
+function outHtml(r){
+  const dls = r.downloads || [], pv = r.preview;
+  if (!dls.length && !pv) return "";
+  const expired = r.links_expire && new Date(r.links_expire) < new Date();
+  const kinds = {pdf:"PDF", xlsx:"XLS", zip:"ZIP"};
+  const btns = dls.map(d => `<a class="dl" href="${esc(d.url)}" target="_blank" rel="noopener">
+      <span class="dk">${kinds[d.kind] || esc(d.kind)}</span><span class="dt"><b>${esc(d.label)}</b><span>${fmtSize(d.size)}</span></span></a>`).join("");
+  const note = r.links_expire ? `<div class="dlnote">${expired ? "Links are being renewed (hourly) — try again soon." : `Links valid until ${new Date(r.links_expire).toLocaleDateString([], {dateStyle:"medium"})}; renewed automatically.`}</div>` : "";
+  return `<div class="out${pv ? "" : " nopv"}">
+    ${pv ? `<div><a class="pv" href="${esc(pv.url)}" target="_blank" rel="noopener" title="Open full size"><img src="${esc(pv.url)}" alt="Full assembly drawing, sheet 1" loading="lazy"></a><div class="pvl">Full assy · sheet 1</div></div>` : ""}
+    <div class="dls">${btns}${note}</div></div>`;
+}
+
 async function loadJobs(){
   const {data, error} = await sb.from("generate_jobs").select("*").order("created_at", {ascending:false}).limit(15);
   if (error){ $("jobs").innerHTML = `<div class="msg err">${esc(error.message)}</div>`; return; }
+  JOBS = data;
+  notifyChanges(data);
+  checkForm();
+  // redraw only when something changed (or once a minute for the time-left)
+  const sig = JSON.stringify(data) + "|" + Math.floor(Date.now() / 60000) + "|" + (OPTS ? 1 : 0);
+  if (sig === lastSig) return;
+  lastSig = sig;
   $("runCount").textContent = data.length ? `${data.length} RUN${data.length > 1 ? "S" : ""}` : "";
   if (!data.length){ $("jobs").innerHTML = `<div class="empty">NO RUNS YET<br>Fill in View A and press Generate.</div>`; return; }
   const open = new Set([...document.querySelectorAll("#jobs details[open]")].map(d => d.dataset.k));
@@ -296,8 +405,7 @@ async function loadJobs(){
       <div class="jh">
         <div><span class="cell-l">Project</span><div class="jcode">${esc(s.code)}</div></div>
         <div><span class="cell-l">Date</span><div class="jwhen">${when}${r.minutes ? ` · ${r.minutes} min` : ""}</div></div>
-        <div style="display:flex;align-items:center;gap:8px"><span class="stamp ${esc(j.status)}">${esc(j.status)}</span>
-          ${j.status === "queued" ? `<button class="ghost" onclick="cancelJob('${j.id}')">Cancel</button>` : ""}</div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="stamp ${esc(j.status)}">${esc(j.status)}</span></div>
       </div>
       <div class="jb">
         <div class="spec">
@@ -307,15 +415,50 @@ async function loadJobs(){
           <div><span class="cell-l">End fitting</span><div class="v">${esc(s.end_fitting)}</div></div>
           <div><span class="cell-l">Colour</span><div class="v">${esc(s.colour)}</div></div>
         </div>
+        ${etaHtml(j)}
         ${j.status !== "queued" && j.status !== "cancelled" ? progHtml(j) : ""}
+        ${outHtml(r)}
         ${r.project ? `<div class="meta mono">↳ ${esc(r.project)}</div>` : ""}
         ${flags.length ? `<details class="flags" data-k="${j.id}f"${o("f")}><summary>⚠ ${flags.length} flag(s) to check</summary><ul>${flags.map(f => `<li>${esc(f)}</li>`).join("")}</ul></details>` : ""}
         ${r.pdfs && r.pdfs.length ? `<details data-k="${j.id}p"${o("p")}><summary>${r.pdfs.length} PDF(s) in PDF DRAWINGS</summary><ul>${r.pdfs.map(f => `<li class="mono">${esc(f)}</li>`).join("")}</ul></details>` : ""}
         ${r.log_tail ? `<details data-k="${j.id}l"${o("l")}><summary>Log</summary><pre>${esc(r.log_tail)}</pre></details>` : ""}
+        <div class="jfoot">
+          <button class="ghost" onclick="duplicateJob('${j.id}')" title="Copy these settings into View A">Duplicate ⧉</button>
+          ${j.status === "queued" ? `<button class="ghost" onclick="cancelJob('${j.id}')">Cancel</button>` : ""}
+        </div>
       </div>
     </div>`;
   }).join("");
 }
+
+/* tell the viewer when a run they are watching finishes */
+function notifyChanges(data){
+  for (const j of data){
+    const prev = lastStatus[j.id];
+    if (prev === "running" && (j.status === "done" || j.status === "failed")){
+      const t = `${(j.settings || {}).code}: ${j.status === "done" ? "finished" : "FAILED"}`;
+      try { if ("Notification" in window && Notification.permission === "granted") new Notification("auto4ge", {body: t}); } catch (e) {}
+      document.title = "● " + t;
+      setTimeout(() => document.title = "Lubestation Generator", 15000);
+    }
+    lastStatus[j.id] = j.status;
+  }
+}
+
+function duplicateJob(id){
+  const j = JOBS.find(x => x.id === id); if (!j) return;
+  const s = j.settings || {};
+  for (const k of FORM_KEYS) if (s[k] != null && $(k)) $(k).value = s[k];
+  $("code").dataset.touched = "1"; $("description").dataset.touched = "1";
+  const n = $("dupNote");
+  n.innerHTML = `<span>Settings copied from <b>${esc(s.code)}</b>. Change the project code, then Generate.</span><button type="button" class="ghost" id="dupClear">Clear</button>`;
+  n.classList.remove("hidden");
+  $("dupClear").onclick = () => { n.classList.add("hidden"); delete $("code").dataset.touched; delete $("description").dataset.touched; suggest(); };
+  checkForm();
+  $("genForm").scrollIntoView({behavior:"smooth", block:"start"});
+  setTimeout(() => { $("code").focus(); $("code").select(); }, 350);
+}
+window.duplicateJob = duplicateJob;
 
 async function cancelJob(id){
   const {error} = await sb.from("generate_jobs").update({status:"cancelled"}).eq("id", id).eq("status", "queued");
@@ -326,16 +469,17 @@ window.cancelJob = cancelJob;
 
 $("genForm").addEventListener("submit", async e => {
   e.preventDefault();
+  if (!checkForm()){ $("genMsg").className = "msg err"; $("genMsg").textContent = "Fix the red notes above first."; return; }
   const settings = {};
-  for (const k of ["fluid","colour","pump","hose_reel","end_fitting","code","description","so_num","client","drawn_by","checked_by","approved_by"])
-    settings[k] = $(k).value.trim();
+  for (const k of FORM_KEYS) settings[k] = $(k).value.trim();
   settings.code = settings.code.toUpperCase(); settings.colour = settings.colour.toUpperCase();
-  if (!/^[A-Z0-9][A-Z0-9-]{3,40}$/.test(settings.code)){ $("genMsg").className = "msg err"; $("genMsg").textContent = "Project code: letters, digits and '-' only."; return; }
+  try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
   $("genBtn").disabled = true;
   const {error} = await sb.from("generate_jobs").insert({settings, status:"queued"});
   $("genBtn").disabled = false;
   $("genMsg").className = "msg " + (error ? "err" : "ok");
-  $("genMsg").textContent = error ? error.message : "Queued. Your computer picks it up within a few seconds.";
+  $("genMsg").textContent = error ? error.message : "Queued. Your computer picks it up within a few seconds. Keep this page open to get a notification when it finishes.";
+  if (!error) $("dupNote").classList.add("hidden");
   loadJobs();
 });
 
