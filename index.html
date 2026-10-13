@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lubestation Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.js"></script>
 <style>
 :root{
@@ -180,23 +180,121 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
   .jh>div:nth-child(2){grid-column:1/-1;order:3;border-top:1px solid var(--rule);border-right:0}
   .vt{flex-wrap:wrap}
 }
+
+/* ===== auto4ge layout like the intoai Bridge Console, light "Slate" colours (Gams 2026-10-13, option E) ===== */
+html:root:not(#x){
+  --paper:#d3dae2; --sheet:#e4e9ee; --field:#eff2f5; --ink:#1a2430; --ink2:#435162; --mute:#717e8e;
+  --rule:#b8c2ce; --hair:#cbd3dc; --grid:transparent; --grid2:transparent;
+  --acc:#2f6fd6; --acc-ink:#ffffff;
+  --ok:#1f8a52; --bad:#c2412f; --warn:#a8670f; --run:#2f6fd6;
+  --ok-bg:rgba(31,138,82,.12); --bad-bg:rgba(194,65,47,.10); --run-bg:rgba(47,111,214,.12); --warn-bg:rgba(168,103,15,.12);
+  --sans:'IBM Plex Sans',-apple-system,'Segoe UI',Roboto,sans-serif; --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+  --shadow:0 1px 2px rgba(20,30,40,.08),0 10px 28px rgba(20,30,40,.08);
+  color-scheme:light;
+}
+html{background:var(--paper)}
+body{padding:0;font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--paper);
+  background-image:radial-gradient(1100px 620px at 14% -8%,rgba(255,255,255,.35),transparent 60%),radial-gradient(900px 560px at 100% 18%,rgba(47,111,214,.06),transparent 62%);
+  background-repeat:no-repeat;background-attachment:fixed}
+.inner{max-width:1200px;margin:0 auto;padding:18px 24px 40px}
+/* top bar */
+.topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--sheet) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.topbar-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}
+.logo{width:28px;height:28px}.logo-bg{fill:var(--acc)}.logo-s{fill:none;stroke:var(--acc-ink);stroke-width:1.7;stroke-linejoin:round}
+.brand-name{font-weight:700;font-size:16px;letter-spacing:-.01em}
+.brand-sep{width:1px;height:18px;background:var(--rule)}
+.brand-sub{color:var(--ink2);font-size:13.5px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.status{display:flex;align-items:center;gap:8px;font:500 12.5px var(--sans);color:var(--ink2);padding:5px 11px;border:1px solid var(--rule);border-radius:999px}
+/* hero */
+/* hero: two free Unsplash photos (Unsplash License), slow cross-fade - Gams 2026-10-13 picked #1 + #6
+   IBC tanks: Anh Nguyen, unsplash.com/photos/EaitBYPYh4Y · industrial equipment: Crystal Kwok, unsplash.com/photos/mhUsz2ezlXQ */
+.hero{position:relative;overflow:hidden;isolation:isolate;border:1px solid var(--rule);border-radius:14px;padding:44px 40px 46px;
+  box-shadow:var(--shadow);min-height:300px;display:flex;flex-direction:column;justify-content:center;background:#06090e}
+.hero-bg{position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center;opacity:0;animation:heroFade 16s infinite}
+.hero-bg.b1{background-image:url("https://images.unsplash.com/photo-1509886246223-cd7fd68f5372?fm=jpg&q=70&w=1800&auto=format&fit=crop");background-position:center 60%}
+.hero-bg.b2{background-image:url("https://images.unsplash.com/photo-1513828742140-ccaa28f3eda0?fm=jpg&q=70&w=1800&auto=format&fit=crop");animation-delay:8s}
+@keyframes heroFade{0%{opacity:0}6%{opacity:1}50%{opacity:1}56%{opacity:0}100%{opacity:0}}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(90deg,rgba(6,9,14,.94) 0%,rgba(6,9,14,.82) 38%,rgba(6,9,14,.35) 70%,rgba(6,9,14,.15) 100%)}
+.hero-credit{position:absolute;right:12px;bottom:8px;font:500 10px var(--mono);color:rgba(255,255,255,.55);letter-spacing:.04em}
+.hero-credit a{color:inherit}
+@media (prefers-reduced-motion:reduce){.hero-bg{animation:none}.hero-bg.b1{opacity:1}}
+.hero h1{font-size:38px}
+.eyebrow{margin:0 0 6px;font:500 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+.hero h1{margin:0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.015em;color:#fff}
+.lede{margin:10px 0 0;max-width:62ch;color:#c9cdd4;font-size:15px}
+/* cards */
+.cols{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px;margin-top:22px;align-items:start}
+.view{border:1px solid var(--rule);border-radius:12px;background:var(--sheet);box-shadow:var(--shadow);padding:20px 22px 22px}
+.vt{align-items:center;margin:0 0 4px}
+.vt h2{font-size:16px;font-weight:600;letter-spacing:0;text-transform:none;text-decoration:none}
+.vt .scale{font:500 10.5px var(--mono);letter-spacing:.14em;color:var(--mute);padding:3px 9px;border:1px solid var(--rule);border-radius:999px}
+fieldset{margin:14px 0 0;padding:14px 0 0;border-top:1px solid var(--hair)}
+fieldset:first-of-type{border-top:0;padding-top:4px}
+legend{font:500 11px var(--mono);letter-spacing:.14em;color:var(--mute);padding:0}
+legend::after{display:none}
+.balloon{width:auto;height:auto;padding:1px 8px;border:1px solid rgba(91,155,255,.35);border-radius:999px;background:rgba(91,155,255,.14);color:var(--acc);font:600 10.5px var(--mono)}
+label{font:500 11px var(--mono);letter-spacing:.08em;color:var(--mute)}
+input,select{border:1px solid var(--rule);border-radius:8px;background:var(--field);color:var(--ink);font:500 14.5px var(--sans);padding:9px 11px}
+input::placeholder{color:#9aa4b0}
+select:disabled{opacity:.55}
+input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px;border-color:transparent}
+.hint{color:var(--mute);font-size:12.5px}
+.primary{border-radius:10px;background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font:600 14px var(--sans);letter-spacing:.04em;text-transform:none}
+.primary:hover{background:#255bb3;border-color:#255bb3;color:#fff}
+.primary:disabled{opacity:.6}
+.ghost{border-radius:8px;border-color:var(--rule);color:var(--ink);font:600 12.5px var(--sans);letter-spacing:.02em;text-transform:none;padding:7px 13px}
+.ghost:hover{background:var(--ink);color:var(--paper)}
+.seg2{border-radius:10px;overflow:hidden;border-color:var(--rule)}
+.seg2 label{color:var(--ink);font:600 13px var(--sans);letter-spacing:0}
+.seg2 label:has(input:checked){background:var(--acc);color:var(--acc-ink)}
+.fieldwarn{border-radius:8px;border-left-width:3px;font:500 12.5px/1.45 var(--sans)}
+.outpath,.dupnote{border-radius:8px}
+.outpath{background:var(--field);border-style:solid;border-color:var(--hair)}
+.dupnote{font:500 12.5px var(--sans)}
+/* runs */
+.job{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--field)}
+.jh{border-bottom:1px solid var(--hair)}.jh>div{border-right:1px solid var(--hair)}
+.jcode{font:600 15px var(--mono)}
+.stamp{transform:none;border:1px solid currentColor;border-radius:999px;padding:3px 11px;font:600 10.5px var(--mono);letter-spacing:.14em}
+.stamp.running{background:var(--run-bg)}.stamp.done{background:var(--ok-bg)}.stamp.queued{background:var(--warn-bg)}
+.spec{border:1px solid var(--hair);border-radius:8px;overflow:hidden}
+.spec>div{border-color:var(--hair)}
+.bar{border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg{border-right-color:rgba(26,36,48,.08)}
+.dl{border-radius:8px;border-color:var(--rule);background:var(--sheet)}
+.dl:hover{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.dl:hover .dk{border-color:var(--acc-ink)}
+.dl.off{background:transparent}
+.dk{border-radius:4px}
+.pv{border-radius:8px;overflow:hidden;border-color:var(--rule)}
+pre{border-radius:8px;background:var(--field);border-color:var(--hair)}
+.notes{max-width:1200px;margin:22px auto 0;border-top:1px solid var(--rule);color:var(--mute);font:500 11.5px/1.7 var(--mono)}
+.empty{border-radius:10px;border-color:var(--rule);color:var(--mute)}
+#login{max-width:420px;margin:28px auto 10px}
+#login .view{padding:24px}
+@media (max-width:960px){.cols{grid-template-columns:1fr}}
+@media (max-width:560px){.inner{padding:14px 16px 32px}.hero{padding:22px 20px;min-height:0}.hero::before{background:rgba(6,9,14,.8)}.hero h1{font-size:24px}.brand-sub{display:none}.topbar-inner{padding:0 16px}}
 </style>
 </head>
 <body>
-<div class="sheet">
-  <div class="zones top"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
-  <div class="zones bot"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
-  <div class="zones side"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
-  <div class="zones side r"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
-  <div class="inner">
-
-  <header class="tb">
-    <div class="t"><span class="cell-l">Title</span><h1>Skid Lubestation Generator</h1><div class="sub">Models · drawings · PDF · DXF · STEP · Master BOM: one button</div></div>
-    <div><span class="cell-l">Dwg no.</span><div class="val">LS1000-GEN</div></div>
-    <div><span class="cell-l">Rev</span><div class="val">0</div></div>
-    <div><span class="cell-l">Workstation</span><div id="bridge" class="status"><span class="dot"></span><span id="bridgeTxt">—</span></div></div>
-    <div class="act"><button id="logout" class="ghost hidden">Log out</button></div>
-  </header>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="#"><svg class="logo" viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="6" class="logo-bg"/><path d="M14 6.5l6.5 3.75v7.5L14 21.5l-6.5-3.75v-7.5L14 6.5z" class="logo-s"/><path d="M7.5 10.25L14 14l6.5-3.75M14 14v7.5" class="logo-s"/></svg><span class="brand-name">auto4ge</span><span class="brand-sep"></span><span class="brand-sub">Lubestation Generator</span></a>
+  <div class="tb-right">
+    <div id="bridge" class="status"><span class="dot"></span><span id="bridgeTxt">—</span></div>
+    <button id="logout" class="ghost hidden">Log out</button>
+  </div>
+</div></header>
+<div class="inner">
+  <section class="hero">
+    <div class="hero-bg b1"></div><div class="hero-bg b2"></div>
+    <p class="hero-credit">Photos: <a href="https://unsplash.com/photos/EaitBYPYh4Y" target="_blank" rel="noopener">Anh Nguyen</a> · <a href="https://unsplash.com/photos/mhUsz2ezlXQ" target="_blank" rel="noopener">Crystal Kwok</a> / Unsplash</p>
+    <p class="eyebrow">auto4ge · SolidWorks generator</p>
+    <h1>Skid Lubestation Generator</h1>
+    <p class="lede">Pick the skid, pump, filter, hose reel and end fitting. One run makes the models, drawings, PDF, DXF, STEP / eDrawings, Standard parts and the Master BOM on the linked workstation.</p>
+  </section>
 
   <section id="login">
     <div class="view">
@@ -212,7 +310,7 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
 
   <main id="app" class="cols hidden">
     <section class="view">
-      <div class="vt"><h2>View A: new variant</h2><span class="sp"></span><span class="scale">SCALE 1:1</span></div>
+      <div class="vt"><h2>New variant</h2><span class="sp"></span><span class="scale">SETTINGS</span></div>
       <form id="genForm">
         <div id="dupNote" class="dupnote hidden"></div>
         <fieldset>
@@ -272,7 +370,7 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
     </section>
 
     <section class="view">
-      <div class="vt"><h2>Revision log: runs</h2><span class="sp"></span><span class="scale" id="runCount"></span></div>
+      <div class="vt"><h2>Runs</h2><span class="sp"></span><span class="scale" id="runCount"></span></div>
       <div id="jobs"><div class="empty">Loading…</div></div>
     </section>
   </main>
@@ -286,7 +384,6 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
     </ol>
   </div>
 
-  </div>
 </div>
 
 <script>
@@ -475,7 +572,7 @@ async function loadJobs(){
   if (sig === lastSig) return;
   lastSig = sig;
   $("runCount").textContent = data.length ? `${data.length} RUN${data.length > 1 ? "S" : ""}` : "";
-  if (!data.length){ $("jobs").innerHTML = `<div class="empty">NO RUNS YET<br>Fill in View A and press Generate.</div>`; return; }
+  if (!data.length){ $("jobs").innerHTML = `<div class="empty">NO RUNS YET<br>Fill in the settings and press Generate.</div>`; return; }
   const open = new Set([...document.querySelectorAll("#jobs details[open]")].map(d => d.dataset.k));
   $("jobs").innerHTML = data.map(j => {
     const s = j.settings || {}, r = j.result || {}, flags = j.flags || [];
