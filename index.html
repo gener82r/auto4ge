@@ -273,6 +273,15 @@ input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px;border
 pre{border-radius:8px;background:var(--field);border-color:var(--hair)}
 .notes{max-width:1200px;margin:22px auto 0;border-top:1px solid var(--rule);color:var(--mute);font:500 11.5px/1.7 var(--mono)}
 .empty{border-radius:10px;border-color:var(--rule);color:var(--mute)}
+/* page background: free Unsplash photo #18 (Homa Appliances, unsplash.com/photos/pWUyHVJgLhg) under a slate veil;
+   near-white cards with a deeper shadow so New variant / Runs stand out (Gams 2026-10-13) */
+html:root:not(#x):not(#y){--sheet:#f7f9fb;--field:#ffffff;--rule:#b5c0cc;
+  --shadow:0 2px 4px rgba(15,25,40,.14),0 18px 40px rgba(15,25,40,.22)}
+body{background:
+  linear-gradient(180deg,rgba(211,218,226,.86),rgba(196,205,216,.90)),
+  #c4cdd8 url("https://images.unsplash.com/photo-1717386255773-1e3037c81788?fm=jpg&q=70&w=2000&auto=format&fit=crop") center/cover no-repeat fixed}
+.view{border-top:4px solid var(--acc)}
+.notes{color:#3b4757}
 #login{max-width:420px;margin:28px auto 10px}
 #login .view{padding:24px}
 @media (max-width:960px){.cols{grid-template-columns:1fr}}
