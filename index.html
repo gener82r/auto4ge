@@ -154,6 +154,17 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
 .dt span{font:500 11px "IBM Plex Mono",monospace;opacity:.75}
 .dlnote{grid-column:1/-1;font:500 11px "IBM Plex Mono",monospace;color:var(--mute)}
 .jfoot{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.dl.off{border-style:dashed;border-color:var(--hair);color:var(--mute);cursor:not-allowed;pointer-events:none}
+.dl.off .dk{border-color:var(--hair)}
+.dl .dg{margin-left:auto;flex:none;font:600 13px "IBM Plex Mono",monospace}
+.seg2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rule)}
+.seg2 label{margin:0;padding:9px 10px;text-align:center;cursor:pointer;border-right:1px solid var(--rule);color:var(--ink);font:600 13px "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:none}
+.seg2 label:last-child{border-right:0}
+.seg2 input{position:absolute;opacity:0;width:1px;height:1px}
+.seg2 label:has(input:checked){background:var(--ink);color:var(--sheet)}
+.seg2 label:has(input:disabled){color:var(--mute);cursor:not-allowed;background:repeating-linear-gradient(-45deg,transparent 0 6px,var(--grid2) 6px 7px)}
+.seg2 small{display:block;font:500 10px "IBM Plex Mono",monospace;letter-spacing:.04em;opacity:.8;margin-top:2px}
+.tag{display:inline-block;margin-left:6px;padding:0 5px;border:1px solid var(--hair);font:500 10px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);vertical-align:1px}
 
 /* notes block */
 .notes{margin-top:22px;border-top:1px solid var(--rule);padding-top:10px;font:500 11.5px/1.7 "IBM Plex Mono",monospace;color:var(--ink2);letter-spacing:.03em}
@@ -206,25 +217,37 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
         <div id="dupNote" class="dupnote hidden"></div>
         <fieldset>
           <legend><span class="balloon">1</span>Configuration</legend>
+          <label>Skid size</label>
+          <div class="seg2" id="variantSeg"></div>
+          <div class="hint" id="variantHint">Which skid lubestation platform.</div>
           <div class="row">
             <div><label for="fluid">Fluid</label><select id="fluid" required></select>
-              <div class="hint">Stickers, Master BOM labels and the suggested code.</div></div>
-            <div><label for="colour">Colour</label><input id="colour" list="colours" value="SILVER" required><datalist id="colours"></datalist>
+              <div class="hint">Stickers and Master BOM labels.</div></div>
+            <div><label for="colour">Colour</label><input id="colour" list="colours" placeholder="e.g. SILVER" autocomplete="off" required><datalist id="colours"></datalist>
               <div class="hint">Powder-coat colour on the palette sheet.</div></div>
           </div>
+          <div class="row">
+            <div><label for="pump_brand">Pump brand</label><select id="pump_brand" required></select></div>
+            <div></div>
+          </div>
           <label for="pump">Pump</label><select id="pump" required></select>
-          <div class="hint">A layout swaps the pump, filter and brackets together.</div>
+          <div class="hint" id="pumpHint">Pick the brand first: only that brand's pumps are listed.</div>
+          <div id="filterBox" class="hidden">
+            <label for="filter">Filter</label><select id="filter"></select>
+            <div class="hint">Piston pumps only. Diaphragm pumps need no filter.</div>
+          </div>
           <label for="hose_reel">Hose reel</label><select id="hose_reel" required></select>
           <div class="hint">Reel sub-assembly from the standard parts library.</div>
           <label for="end_fitting">End fitting / nozzle</label><select id="end_fitting" required></select>
-          <div class="hint">Degreaser and waste oil normally keep the ball valve.</div>
+          <div class="hint">Degreaser and waste oil normally keep a ball valve.</div>
+          <div id="comboWarn" class="fieldwarn bad hidden"></div>
         </fieldset>
         <fieldset>
           <legend><span class="balloon">2</span>Document</legend>
-          <label for="code">Project code</label><input id="code" class="mono" placeholder="LS1000-1855-OIL-GRA" autocomplete="off" required>
+          <label for="code">Project code</label><input id="code" class="mono" placeholder="e.g. LS1000-1855-OIL-GRA" autocomplete="off" required>
           <div class="hint">Prefix of every file and drawing. Letters, digits and "-" only.</div>
           <div id="codeWarn" class="fieldwarn hidden"></div>
-          <label for="description">Description</label><input id="description" placeholder="Lubestation 1 IBC Oil Dispensing Skid - Graco Pump" required>
+          <label for="description">Description</label><input id="description" placeholder="e.g. Lubestation 1 IBC Oil Dispensing Skid - Graco Pump" autocomplete="off" required>
           <div class="hint">Becomes part of the folder name.</div>
           <div id="descWarn" class="fieldwarn bad hidden"></div>
           <div class="row">
@@ -237,7 +260,7 @@ pre{white-space:pre-wrap;font:12px/1.45 "IBM Plex Mono",monospace;background:var
         <fieldset>
           <legend><span class="balloon">3</span>Sign-off</legend>
           <div class="row3">
-            <div><label for="drawn_by">Drawn</label><input id="drawn_by"></div>
+            <div><label for="drawn_by">Drawn</label><input id="drawn_by" placeholder="e.g. J. GAMBOA" required></div>
             <div><label for="checked_by">Checked</label><input id="checked_by"></div>
             <div><label for="approved_by">Approved</label><input id="approved_by"></div>
           </div>
@@ -273,10 +296,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 let OPTS = null, timer = null, JOBS = [], lastSig = "", lastStatus = {};
 const FLUID_WORD = {DEG:"Degreaser", OIL:"Oil", GRE:"Grease", WOIL:"Waste Oil", COO:"Coolant"};
-const FORM_KEYS = ["fluid","colour","pump","hose_reel","end_fitting","code","description","so_num","client","drawn_by","checked_by","approved_by"];
+const FORM_KEYS = ["variant","fluid","colour","pump_brand","pump","filter","hose_reel","end_fitting","code","description","so_num","client","drawn_by","checked_by","approved_by"];
+const TYPE_WORD = {piston:"Piston", diaphragm:"Diaphragm", electric:"Electric diaphragm"};
 const BAD_CHARS = /[<>:"\/\\|?*]/;
 
-function fill(sel, items){ sel.innerHTML = items.map(o => `<option value="${esc(o.key)}">${esc(o.label)}</option>`).join(""); }
+function fill(sel, items, blank){
+  sel.innerHTML = (blank ? `<option value="">${esc(blank)}</option>` : "") + items.map(o =>
+    `<option value="${esc(o.key)}"${o.ready === false ? " disabled" : ""}>${esc(o.label)}${o.ready === false ? " · not ready yet" : ""}</option>`).join("");
+}
 function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function fmtSize(b){ return b > 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB"; }
 function fmtDur(sec){ sec = Math.max(0, Math.round(sec)); const h = Math.floor(sec/3600), m = Math.round((sec%3600)/60); return h ? `${h} h ${m} min` : `${m} min`; }
@@ -291,23 +318,64 @@ async function loadOptions(){
   dot.className = "dot " + (age < 150 ? "on" : "off");
   $("bridgeTxt").textContent = age < 150 ? "Online" : "Offline";
   $("bridge").title = age < 150 ? "Your computer is connected" : "Computer offline: runs wait in the queue";
-  if (!$("pump").options.length){
-    fill($("fluid"), OPTS.fluids); fill($("pump"), OPTS.pumps); fill($("hose_reel"), OPTS.hose_reels); fill($("end_fitting"), OPTS.end_fittings);
+  if (!$("fluid").options.length){
+    // Gams 2026-10-13: colour, code, description and drawn start blank (like SO # and client)
+    $("variantSeg").innerHTML = (OPTS.variants || [{key:"1855", label:"LS1000-1855", ready:true}]).map((v, i) =>
+      `<label title="${esc(v.note || "")}"><input type="radio" name="variant" value="${esc(v.key)}"${v.ready === false ? " disabled" : ""}${i === 0 ? " checked" : ""}>${esc(v.label)}${v.ready === false ? "<small>coming soon</small>" : ""}</label>`).join("");
+    document.querySelectorAll("input[name=variant]").forEach(r => r.addEventListener("change", () => { placeholders(); checkForm(); }));
+    fill($("fluid"), OPTS.fluids, "Choose…");
+    const brands = [...new Set((OPTS.pumps || []).map(p => p.brand))].sort();
+    fill($("pump_brand"), brands.map(b => ({key:b, label:b})), "Choose…");
+    fillPumps();
+    fill($("filter"), OPTS.filters || [], "Choose…");
+    fill($("hose_reel"), OPTS.hose_reels, "Choose…"); fill($("end_fitting"), OPTS.end_fittings, "Choose…");
     $("colours").innerHTML = OPTS.colours.map(c => `<option value="${esc(c)}">`).join("");
-    for (const k of ["drawn_by","checked_by","approved_by"]) $(k).value = OPTS.defaults[k] || "";
-    $("fluid").value = "OIL"; suggest();
+    for (const k of ["checked_by","approved_by"]) $(k).value = (OPTS.defaults || {})[k] || "";
+    placeholders();
   }
   checkForm();
 }
 
-function suggest(){
-  const f = $("fluid").value;
-  if (!$("code").dataset.touched) $("code").value = `LS1000-1855-${f}-GRA`;
-  if (!$("description").dataset.touched) $("description").value = `Lubestation 1 IBC ${FLUID_WORD[f] || f} Dispensing Skid - Graco Pump`;
+/* pump brand -> only that brand's pumps; piston pump -> filter choice */
+function fillPumps(){
+  const b = $("pump_brand").value, keep = $("pump").value;
+  const list = (OPTS.pumps || []).filter(p => p.brand === b).map(p => ({...p, label: `${TYPE_WORD[p.type] || p.type} · ${p.label}`}));
+  fill($("pump"), list, b ? "Choose…" : "Choose the brand first");
+  $("pump").disabled = !b;
+  if (list.some(p => p.key === keep)) $("pump").value = keep;
+  pumpChanged();
+}
+function pumpChanged(){
+  const p = (OPTS.pumps || []).find(x => x.key === $("pump").value);
+  const piston = p && p.type === "piston";
+  $("filterBox").classList.toggle("hidden", !piston);
+  $("filter").required = !!piston;
+  if (!piston) $("filter").value = "";
+  $("pumpHint").textContent = p ? `${TYPE_WORD[p.type] || p.type} pump${piston ? ": choose a filter below." : ": no filter needed."}` : "Pick the brand first: only that brand's pumps are listed.";
   checkForm();
 }
-for (const id of ["code","description"]) $(id).addEventListener("input", e => { e.target.dataset.touched = "1"; checkForm(); });
-$("fluid").addEventListener("change", suggest);
+$("pump_brand").addEventListener("change", fillPumps);
+$("pump").addEventListener("change", pumpChanged);
+$("filter").addEventListener("change", checkForm);
+$("end_fitting").addEventListener("change", checkForm);
+function variantVal(){ const r = document.querySelector("input[name=variant]:checked"); return r ? r.value : "1855"; }
+function placeholders(){
+  const f = $("fluid").value || "OIL";
+  $("code").placeholder = `e.g. LS1000-${variantVal()}-${f}-GRA`;
+  $("description").placeholder = `e.g. Lubestation 1 IBC ${FLUID_WORD[f] || f} Dispensing Skid - Graco Pump`;
+}
+/* the pump + filter combinations the generator can make (the bridge sends them) */
+function comboProblem(){
+  const p = (OPTS && OPTS.pumps || []).find(x => x.key === $("pump").value);
+  if (p && p.type === "piston" && $("filter").value){
+    const ok = (OPTS.pump_filter_layouts || []).some(([pk, fk]) => pk === p.key && fk === $("filter").value);
+    if (!ok) return `${p.label} with this filter is not ready in the generator yet.`;
+  }
+  return "";
+}
+
+for (const id of ["code","description"]) $(id).addEventListener("input", checkForm);
+$("fluid").addEventListener("change", () => { placeholders(); checkForm(); });
 
 /* live checks on the document fields */
 function checkForm(){
@@ -326,7 +394,9 @@ function checkForm(){
   const dbad = BAD_CHARS.test(desc);
   dw.textContent = dbad ? 'Remove < > : " / \\ | ? * (not allowed in folder names).' : "";
   dw.classList.toggle("hidden", !dbad);
-  return !(bad || dbad);
+  const cp = comboProblem(), cw = $("comboWarn");
+  cw.textContent = cp; cw.classList.toggle("hidden", !cp);
+  return !(bad || dbad || cp);
 }
 
 /* time left: median of this step's past runs, else the typical time the bridge sends */
@@ -371,13 +441,21 @@ function progHtml(job){
     <div class="bar">${segs}</div><div class="steps">${names}</div></div>`;
 }
 
-function outHtml(r){
-  const dls = r.downloads || [], pv = r.preview;
-  if (!dls.length && !pv) return "";
+function outHtml(j){
+  const r = j.result || {}, dls = r.downloads || [], pv = r.preview;
+  const docs = (OPTS && OPTS.documents) || [];
+  if (!OPTS || !OPTS.downloads || !docs.length) return "";
+  if (j.status !== "running" && j.status !== "done" && !dls.length) return "";
   const expired = r.links_expire && new Date(r.links_expire) < new Date();
   const kinds = {pdf:"PDF", xlsx:"XLS", zip:"ZIP"};
-  const btns = dls.map(d => `<a class="dl" href="${esc(d.url)}" target="_blank" rel="noopener">
-      <span class="dk">${kinds[d.kind] || esc(d.kind)}</span><span class="dt"><b>${esc(d.label)}</b><span>${fmtSize(d.size)}</span></span></a>`).join("");
+  const find = d => dls.find(x => x.id === d.id) || dls.find(x => !x.id && x.label === d.label);
+  const btns = docs.map(d => {
+    const f = find(d);
+    if (f && f.url && !expired) return `<a class="dl" href="${esc(f.url)}" target="_blank" rel="noopener" title="Download ${esc(f.name)}">
+      <span class="dk">${kinds[f.kind] || esc(f.kind)}</span><span class="dt"><b>${esc(d.label)}</b><span>${fmtSize(f.size)}</span></span><span class="dg">↓</span></a>`;
+    const why = j.status === "running" ? "not ready yet" : (expired ? "renewing link…" : "not available");
+    return `<span class="dl off" aria-disabled="true"><span class="dk">${kinds[d.kind] || esc(d.kind)}</span><span class="dt"><b>${esc(d.label)}</b><span>${why}</span></span><span class="dg">↓</span></span>`;
+  }).join("");
   const note = r.links_expire ? `<div class="dlnote">${expired ? "Links are being renewed (hourly) — try again soon." : `Links valid until ${new Date(r.links_expire).toLocaleDateString([], {dateStyle:"medium"})}; renewed automatically.`}</div>` : "";
   return `<div class="out${pv ? "" : " nopv"}">
     ${pv ? `<div><a class="pv" href="${esc(pv.url)}" target="_blank" rel="noopener" title="Open full size"><img src="${esc(pv.url)}" alt="Full assembly drawing, sheet 1" loading="lazy"></a><div class="pvl">Full assy · sheet 1</div></div>` : ""}
@@ -385,10 +463,12 @@ function outHtml(r){
 }
 
 async function loadJobs(){
-  const {data, error} = await sb.from("generate_jobs").select("*").order("created_at", {ascending:false}).limit(15);
+  let {data, error} = await sb.from("generate_jobs").select("*").order("created_at", {ascending:false}).limit(25);
   if (error){ $("jobs").innerHTML = `<div class="msg err">${esc(error.message)}</div>`; return; }
-  JOBS = data;
-  notifyChanges(data);
+  notifyChanges(data);  // a run that just failed still gets its notification
+  // Gams 2026-10-13: failed / cancelled runs are not shown in the log
+  JOBS = data.filter(j => j.status !== "failed" && j.status !== "cancelled");
+  data = JOBS;
   checkForm();
   // redraw only when something changed (or once a minute for the time-left)
   const sig = JSON.stringify(data) + "|" + Math.floor(Date.now() / 60000) + "|" + (OPTS ? 1 : 0);
@@ -409,15 +489,16 @@ async function loadJobs(){
       </div>
       <div class="jb">
         <div class="spec">
+          <div><span class="cell-l">Skid</span><div class="v">${esc(s.variant || "1855")}</div></div>
           <div><span class="cell-l">Fluid</span><div class="v">${esc(s.fluid)}</div></div>
-          <div><span class="cell-l">Pump</span><div class="v">${esc(s.pump)}</div></div>
+          <div><span class="cell-l">Pump</span><div class="v" title="${esc(((OPTS && OPTS.pumps || []).find(x => x.key === s.pump) || {}).label || s.pump)}">${esc(s.pump)}${s.filter ? `<span class="tag">${esc(s.filter)}</span>` : ""}</div></div>
           <div><span class="cell-l">Hose reel</span><div class="v">${esc(s.hose_reel)}</div></div>
           <div><span class="cell-l">End fitting</span><div class="v">${esc(s.end_fitting)}</div></div>
           <div><span class="cell-l">Colour</span><div class="v">${esc(s.colour)}</div></div>
         </div>
         ${etaHtml(j)}
         ${j.status !== "queued" && j.status !== "cancelled" ? progHtml(j) : ""}
-        ${outHtml(r)}
+        ${outHtml(j)}
         ${r.project ? `<div class="meta mono">↳ ${esc(r.project)}</div>` : ""}
         ${flags.length ? `<details class="flags" data-k="${j.id}f"${o("f")}><summary>⚠ ${flags.length} flag(s) to check</summary><ul>${flags.map(f => `<li>${esc(f)}</li>`).join("")}</ul></details>` : ""}
         ${r.pdfs && r.pdfs.length ? `<details data-k="${j.id}p"${o("p")}><summary>${r.pdfs.length} PDF(s) in PDF DRAWINGS</summary><ul>${r.pdfs.map(f => `<li class="mono">${esc(f)}</li>`).join("")}</ul></details>` : ""}
@@ -441,22 +522,33 @@ function notifyChanges(data){
       document.title = "● " + t;
       setTimeout(() => document.title = "Lubestation Generator", 15000);
     }
+    if (prev === "queued" && j.status === "failed"){  // rejected by the workstation: say why (failed runs are hidden)
+      $("genMsg").className = "msg err";
+      $("genMsg").textContent = `${(j.settings || {}).code}: not started - ${(j.flags || []).join("; ")}`;
+    }
     lastStatus[j.id] = j.status;
   }
 }
 
+function setForm(s){
+  const v = document.querySelector(`input[name=variant][value="${CSS.escape(String(s.variant || "1855"))}"]`); if (v && !v.disabled) v.checked = true;
+  const p = (OPTS.pumps || []).find(x => x.key === s.pump);
+  $("pump_brand").value = s.pump_brand || (p ? p.brand : ""); fillPumps();
+  for (const k of FORM_KEYS) if (k !== "variant" && k !== "pump_brand" && s[k] != null && $(k)) $(k).value = s[k];
+  pumpChanged(); placeholders();
+}
 function duplicateJob(id){
   const j = JOBS.find(x => x.id === id); if (!j) return;
   const s = j.settings || {};
-  for (const k of FORM_KEYS) if (s[k] != null && $(k)) $(k).value = s[k];
-  $("code").dataset.touched = "1"; $("description").dataset.touched = "1";
+  setForm(s);
+  $("code").value = "";
   const n = $("dupNote");
-  n.innerHTML = `<span>Settings copied from <b>${esc(s.code)}</b>. Change the project code, then Generate.</span><button type="button" class="ghost" id="dupClear">Clear</button>`;
+  n.innerHTML = `<span>Settings copied from <b>${esc(s.code)}</b>. Fill in a new project code, then Generate.</span><button type="button" class="ghost" id="dupClear">Clear</button>`;
   n.classList.remove("hidden");
-  $("dupClear").onclick = () => { n.classList.add("hidden"); delete $("code").dataset.touched; delete $("description").dataset.touched; suggest(); };
+  $("dupClear").onclick = () => { n.classList.add("hidden"); $("genForm").reset(); fillPumps(); for (const k of ["checked_by","approved_by"]) $(k).value = (OPTS.defaults || {})[k] || ""; checkForm(); };
   checkForm();
   $("genForm").scrollIntoView({behavior:"smooth", block:"start"});
-  setTimeout(() => { $("code").focus(); $("code").select(); }, 350);
+  setTimeout(() => { $("code").focus(); }, 350);
 }
 window.duplicateJob = duplicateJob;
 
@@ -471,7 +563,8 @@ $("genForm").addEventListener("submit", async e => {
   e.preventDefault();
   if (!checkForm()){ $("genMsg").className = "msg err"; $("genMsg").textContent = "Fix the red notes above first."; return; }
   const settings = {};
-  for (const k of FORM_KEYS) settings[k] = $(k).value.trim();
+  for (const k of FORM_KEYS) settings[k] = k === "variant" ? variantVal() : ($(k).value || "").trim();
+  if (!settings.filter) delete settings.filter;
   settings.code = settings.code.toUpperCase(); settings.colour = settings.colour.toUpperCase();
   try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
   $("genBtn").disabled = true;
