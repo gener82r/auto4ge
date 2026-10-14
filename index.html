@@ -256,6 +256,11 @@ input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px;border
 .dupnote{font:500 12.5px var(--sans)}
 /* runs */
 .job{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--field)}
+.job .jh{cursor:pointer}
+.job .chev{font-size:13px;color:var(--mute,#6b7785);width:12px;text-align:center}
+.job.closed .jh{border-bottom:0}
+.jmini{padding:0 16px 12px;font-size:12.5px;color:var(--mute,#6b7785);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.more{display:block;width:100%;margin-top:14px}
 .jh{border-bottom:1px solid var(--hair)}.jh>div{border-right:1px solid var(--hair)}
 .jcode{font:600 15px var(--mono)}
 .stamp{transform:none;border:1px solid currentColor;border-radius:999px;padding:3px 11px;font:600 10.5px var(--mono);letter-spacing:.14em}
@@ -582,17 +587,24 @@ async function loadJobs(){
   $("runCount").textContent = data.length ? `${data.length} RUN${data.length > 1 ? "S" : ""}` : "";
   if (!data.length){ $("jobs").innerHTML = `<div class="empty">NO RUNS YET<br>Fill in the settings and press Generate.</div>`; return; }
   const open = new Set([...document.querySelectorAll("#jobs details[open]")].map(d => d.dataset.k));
-  $("jobs").innerHTML = data.map(j => {
+  const shown = data.slice(0, SHOW_RUNS);
+  const newestDone = (shown.find(j => j.status === "done") || {}).id;
+  $("jobs").innerHTML = shown.map((j, idx) => {
     const s = j.settings || {}, r = j.result || {}, flags = j.flags || [];
+    // Gams 2026-10-14: the page got longer with every run -> only the newest / running run is open,
+    // older runs are one header line (click to open), and only the last SHOW_RUNS are listed
+    const live = j.status === "running" || j.status === "queued";
+    const isOpen = EXPANDED.has(j.id) || (!COLLAPSED.has(j.id) && (live || idx === 0 || j.id === newestDone));
     const when = new Date(j.created_at).toLocaleString([], {dateStyle:"medium", timeStyle:"short"});
     const o = k => open.has(j.id + k) ? " open" : "";
-    return `<div class="job">
-      <div class="jh">
+    return `<div class="job${isOpen ? "" : " closed"}">
+      <div class="jh" onclick="toggleJob('${j.id}', ${isOpen})" title="${isOpen ? "Click to fold" : "Click to open"}">
         <div><span class="cell-l">Project</span><div class="jcode">${esc(s.code)}</div></div>
         <div><span class="cell-l">Date</span><div class="jwhen">${when}${r.minutes ? ` · ${r.minutes} min` : ""}</div></div>
-        <div style="display:flex;align-items:center;gap:8px"><span class="stamp ${esc(j.status)}">${esc(j.status)}</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="stamp ${esc(j.status)}">${esc(j.status)}</span><span class="chev">${isOpen ? "▾" : "▸"}</span></div>
       </div>
-      <div class="jb">
+      ${isOpen ? "" : `<div class="jmini mono">${esc(s.variant || "1855")} · ${esc(s.fluid)} · ${esc(s.pump)}${s.filter ? " + " + esc(s.filter) : ""} · ${esc(s.hose_reel)} · ${esc(s.end_fitting)}</div>`}
+      <div class="jb"${isOpen ? "" : " hidden"}>
         <div class="spec">
           <div><span class="cell-l">Skid</span><div class="v">${esc(s.variant || "1855")}</div></div>
           <div><span class="cell-l">Fluid</span><div class="v">${esc(s.fluid)}</div></div>
@@ -614,7 +626,15 @@ async function loadJobs(){
         </div>
       </div>
     </div>`;
-  }).join("");
+  }).join("") + (data.length > SHOW_RUNS ? `<button class="ghost more" onclick="SHOW_RUNS += 5; lastSig = ''; loadJobs()">Show ${Math.min(5, data.length - SHOW_RUNS)} older run(s) · ${data.length - SHOW_RUNS} hidden</button>` : "");
+}
+
+let SHOW_RUNS = 5;
+const EXPANDED = new Set(), COLLAPSED = new Set();
+function toggleJob(id, isOpen){
+  if (isOpen){ EXPANDED.delete(id); COLLAPSED.add(id); } else { COLLAPSED.delete(id); EXPANDED.add(id); }
+  lastSig = "";
+  loadJobs();
 }
 
 /* tell the viewer when a run they are watching finishes */
